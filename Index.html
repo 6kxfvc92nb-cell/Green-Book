@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>The Green Book — Golf Practice</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Green Book" />
+  <meta name="theme-color" content="#1B2920" />
+  <meta name="description" content="A 12-week daily companion for moving from 18 to 10 handicap." />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231B2920'/%3E%3Ctext x='90' y='128' font-family='Georgia,serif' font-size='110' font-weight='500' fill='%23B8924A' text-anchor='middle' font-style='italic'%3Eg%3C/text%3E%3C/svg%3E" />
+  <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22The%20Green%20Book%22%2C%22short_name%22%3A%22Green%20Book%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23EFE9DA%22%2C%22theme_color%22%3A%22%231B2920%22%7D" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..900,0..100&family=Manrope:wght@300..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    html, body, #root { height: 100%; margin: 0; padding: 0; }
+    body { background: #EFE9DA; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+    .ff-display { font-family: 'Fraunces', Georgia, serif; font-variation-settings: 'opsz' 144, 'SOFT' 30; }
+    .ff-body { font-family: 'Manrope', system-ui, sans-serif; }
+    .ff-mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .grain { background-image: radial-gradient(rgba(0,0,0,0.025) 1px, transparent 1px); background-size: 3px 3px; }
+    .no-tap-highlight { -webkit-tap-highlight-color: transparent; }
+    input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
+    @supports (padding: max(0px)) {
+      .safe-bottom { padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
+      .safe-top { padding-top: max(3rem, env(safe-area-inset-top)); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Georgia,serif;color:#6B7568;font-size:1.25rem;">Loading…</div>
+  </div>
+  <script>
+    window.addEventListener('error', function (e) {
+      var root = document.getElementById('root');
+      if (root) { root.innerHTML = '<div style="padding:2rem;font-family:system-ui,sans-serif;color:#1B2920;line-height:1.5;"><h2 style="font-family:Georgia,serif;color:#B85C3C;margin:0 0 1rem;">Failed to load</h2><p style="margin:0 0 1rem;">' + (e.message || 'Unknown error') + '</p><p style="margin:0 0 .5rem;color:#6B7568;font-size:.9rem;">Source: ' + (e.filename || '—').split('/').pop() + ':' + (e.lineno || '—') + '</p></div>'; }
+    });
+  </script>
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, Fragment } = React;
+    window.storage = {
+      get: async (key) => { try { const v = localStorage.getItem(key); return v != null ? { value: v } : null; } catch (e) { return null; } },
+      set: async (key, value) => { try { localStorage.setItem(key, value); return { value }; } catch (e) { console.error(e); return null; } },
+    };
+    const C = { bg: "#EFE9DA", bgDark: "#1B2920", card: "#FBF8EE", ink: "#1B2920", ink2: "#2D3D32", muted: "#6B7568", mutedLight: "#A8A595", accent: "#B8924A", accentLight: "#D9B57A", green: "#4A6B3F", warn: "#B85C3C", line: "#D9D2BF", lineDark: "#3A4A40" };
+    const Icon = ({ children, size = 20, strokeWidth = 2, color, style, ...props }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color || "currentColor"} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>{children}</svg>);
+    const ChevronLeft = (p) => <Icon {...p}><path d="m15 18-6-6 6-6"/></Icon>;
+    const Check = (p) => <Icon {...p}><path d="M20 6 9 17l-5-5"/></Icon>;
+    const Plus = (p) => <Icon {...p}><path d="M12 5v14"/><path d="M5 12h14"/></Icon>;
+    const X = (p) => <Icon {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Icon>;
+    const Settings = (p) => <Icon {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></Icon>;
+    const Trophy = (p) => <Icon {...p}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></Icon>;
+    const BarChart3 = (p) => <Icon {...p}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></Icon>;
+    const Calendar = (p) => <Icon {...p}><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></Icon>;
+
+    const DAYS = {
+      1: { title: "Mechanics & Short Putts", theme: "PUTTING", short: "Day 1", phases: {
+        1: { drills: [
+          { name: "Gate drill", mins: 12, desc: "Two tees just wider than your putter head, 6 inches in front of the ball. Putt to a target on the far end of the mat. 30 putts. Goal: 25+ clean strikes through the gate.", metric: { key: "gate", label: "Clean strikes", max: 30 } },
+          { name: "3-ft makes", mins: 10, desc: "30 putts from 3 ft. You should be making 27+ by week 4. If not, film it — there is a real flaw to find.", metric: { key: "threeFt", label: "Makes", max: 30 } },
+          { name: "Coin drill", mins: 5, desc: "Place a coin 6 inches in front of the ball on your target line. Roll the ball over the coin to a 6-ft target. 15 putts. Trains start-line precision — a different skill from the gate drill, which trains face and path." },
+          { name: "Journal", mins: 3, desc: "Score the session 1–10 and note one thing to fix next time." },
+        ], weeks: { 1: "6 ft target", 2: "8 ft target", 3: "8 ft target, gate narrowed by ¼ in", 4: "Mix random distances: 3 / 6 / 9 / 12 ft" } },
+        2: { drills: [
+          { name: "Worst-ball ladder", mins: 12, desc: "Make a putt from 3, then 6, then 9, then 12 ft consecutively. Any miss = restart from 3 ft. Complete three full ladders.", metric: { key: "ladders", label: "Ladders completed", max: 6 } },
+          { name: "6-ft repeat", mins: 10, desc: "Six putts from 6 ft. Make 4 of 6 to pass a round. Three rounds. Move the tee position slightly between rounds.", metric: { key: "sixFt", label: "Rounds passed (4+/6)", max: 3 } },
+          { name: "Pressure putt", mins: 5, desc: "Imagine a 6-footer to break 80. Full pre-shot routine, one putt. 5 reps.", metric: { key: "pressureMakes", label: "Makes", max: 5 } },
+          { name: "Journal", mins: 3, desc: "Score the session 1–10." },
+        ], weeks: {} },
+        3: { drills: [
+          { name: "Tour 9", mins: 15, desc: "3 balls each from 3, 6, and 10 ft. 1 point from 3 and 6, 2 points from 10. Max = 12. Track this weekly. Target 8+ by week 12.", metric: { key: "tour9", label: "Score", max: 12 } },
+          { name: "Pressure ladder", mins: 12, desc: "Make 3, 6, 9, 12 ft consecutively. Each successful ladder = 1 round. Goal: 5 rounds in 12 minutes.", metric: { key: "pLadder", label: "Ladders", max: 8 } },
+          { name: "Journal", mins: 3, desc: "Score 1–10. Note pressure-putt feel." },
+        ], weeks: {} },
+      } },
+      2: { title: "Chipping & Wedges", theme: "SHORT GAME", short: "Day 2", phases: {
+        1: { drills: [
+          { name: "Setup check on camera", mins: 5, desc: "Film 5 setup reps DTL and face-on. GolfTec checkpoints: narrow stance, ball back of center, weight 60/40 forward, hands ahead, shaft leaning toward target. The setup is half the chip." },
+          { name: "Strike consistency", mins: 15, desc: "30 chips into the net from 8–10 ft equivalent. PW only. Bay Jark compression cue: feel the lead shoulder move away from your head through impact — that gets you ball-first, mat-second. Listen for the sound." },
+          { name: "Partial wedge swings", mins: 8, desc: "7:30 backswing length with PW. 15 swings into the net. Tempo and balance only." },
+          { name: "Journal", mins: 2, desc: "Score 1–10. Note any tendency (fat / thin / decel)." },
+        ], weeks: {} },
+        2: { drills: [
+          { name: "Wedge clock drill", mins: 22, desc: "PW first, then SW. Backswings at 7:30, 9:00, 10:30 on the clock face. 10 swings each length, each club. Strike quality is the focus indoors. Carry yardages get verified at the range." },
+          { name: "Trajectory drill", mins: 6, desc: "Same swing length, ball position changes. Forward = high, middle = standard, back = low. 5 reps each." },
+          { name: "Journal carry distances", mins: 2, desc: "Once you have verified yardages at the range, write down all 6 here (PW & SW × 7:30 / 9:00 / 10:30)." },
+        ], weeks: {} },
+        3: { drills: [
+          { name: "Random call-out drill", mins: 15, desc: "Use a random number app to call yardages 30–110. Pick the correct club and swing length, hit it. 15 reps. The decision-making is the practice." },
+          { name: "Up-and-down simulation", mins: 12, desc: "10 chips into the net, and after each one walk to your putting mat and try a 6-foot putt. Score: up-and-downs converted out of 10.", metric: { key: "upDown", label: "Up & downs", max: 10 } },
+          { name: "Journal", mins: 3, desc: "Score 1–10." },
+        ], weeks: {} },
+      } },
+      3: { title: "Full Swing", theme: "FULL SWING", short: "Day 3", phases: {
+        1: { drills: [
+          { name: "Half-swing strikes", mins: 5, desc: "12 balls with 9-iron. Lead arm parallel to ground at the top, mirror-image follow-through. Bay Jark cue: 'exit low and left' — feel the chest and lead shoulder rotating away from the head through impact. If you can't strike a half-swing clean, full swings will spray." },
+          { name: "Feet-together drill", mins: 8, desc: "15 balls with 8-iron, feet 4 inches apart. Real swings, normal length. Bay Jark mantra: 'turn, don't sway' — pelvis rotates around the spine, doesn't slide laterally off the ball. If your sequence is off you'll fall over. Best ball-striking drill in golf." },
+          { name: "Tee gate strikes", mins: 7, desc: "Place two tees on the mat just slightly wider than your clubhead. 12 balls with 7-iron through the gate without clipping either tee. Forces pure center-face contact — you'll know instantly when you miss it. The fastest way to clean up strike quality." },
+          { name: "Head-still strikes", mins: 5, desc: "Camera face-on at head height. At address, note where the crown of your head sits on the screen. 10 balls with 7-iron, check playback after each: your head must stay at or above that mark through the backswing. Dropping below = lost spine angle, the single biggest cause of inconsistent contact." },
+          { name: "Video review + journal", mins: 5, desc: "Pick ONE thing to fix. Just one." },
+        ], weeks: { 1: "9-iron and 7-iron only", 2: "9-iron and 7-iron only", 3: "Add driver at 75% effort", 4: "Add driver at 75% effort" } },
+        2: { drills: [
+          { name: "Pump drill with ball", mins: 8, desc: "From the top of the backswing, pump down to halfway and back twice, then complete the swing on the third pump and strike the ball. 15 reps. Bay Jark sequencing cue: feel the pressure shift to the lead foot before the arms drop. Lower body leads, always." },
+          { name: "Pre-set impact strikes", mins: 15, desc: "Set up in the GolfTec textbook impact position — hands ahead, shaft leaning forward, lead hip ~40° open, ~80% weight on the lead foot, trail heel slightly off the ground — then rotate back to the top and return to that exact position to hit the ball. 25 reps with 8-iron. Trains the destination, which most amateur swings never reach." },
+          { name: "Video review + journal", mins: 7, desc: "Compare DTL impact frame to a reference swing. Bay Jark early-extension check: at impact, your hips should be roughly where they started — no thrust toward the ball. If they've pushed forward, work the chest-rotation feel next session." },
+        ], weeks: {} },
+        3: { drills: [
+          { name: "Pre-shot routine + strike", mins: 15, desc: "Pick a target on the net. Full routine: visualize ball flight, practice swing, set up, one look, swing. 15 balls. Same timing every rep." },
+          { name: "Driver session", mins: 10, desc: "20 full-speed driver swings into the net. Bay Jark's 4-point driver setup before every rep: hands below the chin, ball forward with wide stance, toe down/heel up of the rear foot, head behind the ball with shoulder tilt. Get the setup right, then make your normal swing. Tempo over power. Film 5." },
+          { name: "Video review", mins: 5, desc: "One thing to fix. Only one." },
+        ], weeks: {} },
+      } },
+      4: { title: "Distance & Pressure", theme: "PUTTING", short: "Day 4", phases: {
+        1: { drills: [
+          { name: "Eyes-closed putts at 12 ft", mins: 8, desc: "15 putts to the end of the mat. Close your eyes after starting the stroke. Pure feel work." },
+          { name: "Stepped ladder", mins: 15, desc: "3, 6, 9, 12 ft. 5 balls at each distance. Score = balls within 1 putter-length of the target. Max = 20.", metric: { key: "ladder", label: "Score", max: 20 } },
+          { name: "12-ft lag", mins: 5, desc: "8 putts to a tee at 12 ft. All 8 must finish within 1 ft of the tee.", metric: { key: "lag12", label: "Within 1 ft", max: 8 } },
+          { name: "Journal", mins: 2, desc: "Score 1–10." },
+        ], weeks: {} },
+        2: { drills: [
+          { name: "Random-distance ladder", mins: 12, desc: "Phone timer calls out a distance every 30 sec (pick from 3, 5, 7, 9, 12 ft). Putt to that distance immediately. 20 putts." },
+          { name: "One-handed putting", mins: 10, desc: "10 putts trail-hand only at 4 ft, then 10 lead-hand only, then 10 normal. Exposes path and pressure issues fast." },
+          { name: "Pressure 6-footer", mins: 5, desc: "5 putts with full routine, imagining a meaningful putt.", metric: { key: "pressure6", label: "Makes", max: 5 } },
+          { name: "Journal", mins: 3, desc: "Score 1–10." },
+        ], weeks: {} },
+        3: { drills: [
+          { name: "9-hole home course", mins: 20, desc: "Mark 9 'holes' on the mat at varied distances (mix 3–12 ft). Play each twice through. Total strokes — lower is better. Beat your previous week's score.", metric: { key: "nineHole", label: "Total strokes", max: 60 } },
+          { name: "Putt to break X", mins: 7, desc: "Set a target score (e.g., break 80). Imagine a 6-footer to hit it. 5 reps with full routine." },
+          { name: "Journal", mins: 3, desc: "Score 1–10." },
+        ], weeks: {} },
+      } },
+    };
+    const PHASES = { 1: { name: "Foundation", weeks: "1–4", desc: "Lock in fundamentals. Stop the bleeding on 3-putts." }, 2: { name: "Skill Building", weeks: "5–8", desc: "Distance control. Reliable wedge contact. Sequence the swing." }, 3: { name: "Pressure", weeks: "9–12", desc: "Apply skills under pressure. Sharpen course management." } };
+    const TEST_BATTERY = [
+      { key: "p3", label: "3-ft makes / 20", goal: 20 }, { key: "p6", label: "6-ft makes / 20", goal: 15 }, { key: "p12", label: "12-ft makes / 20", goal: 10 },
+      { key: "ladder", label: "Stepped ladder / 20", goal: 17 }, { key: "tour9", label: "Tour 9 / 12", goal: 9 }, { key: "ud", label: "Up & down / 10", goal: 7 },
+      { key: "pwYards", label: "PW full carry (yards)", goal: null }, { key: "swYards", label: "SW full carry (yards)", goal: null },
+    ];
+    const todayISO = () => new Date().toISOString().slice(0, 10);
+    const fmtDate = (iso) => { if (!iso) return "—"; const d = new Date(iso + "T00:00:00"); return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }); };
+    const daysBetween = (a, b) => Math.floor((new Date(b) - new Date(a)) / 86400000);
+    const getWeek = (startDate) => Math.min(12, Math.max(1, Math.floor(daysBetween(startDate, todayISO()) / 7) + 1));
+    const getPhase = (week) => (week <= 4 ? 1 : week <= 8 ? 2 : 3);
+    const sg = async (key, fallback) => { try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : fallback; } catch { return fallback; } };
+    const ss = async (key, value) => { try { await window.storage.set(key, JSON.stringify(value)); } catch (e) { console.error(e); } };
+
+    const Pill = ({ children, color = C.ink, bg = "transparent", border = C.line }) => (<span className="ff-mono inline-flex items-center text-xs uppercase tracking-widest px-2.5 py-1 rounded-full border" style={{ color, backgroundColor: bg, borderColor: border, letterSpacing: "0.12em" }}>{children}</span>);
+    const Card = ({ children, className = "", onClick, style = {} }) => (<div onClick={onClick} className={`rounded-2xl ${onClick ? "active:scale-[0.99] no-tap-highlight cursor-pointer" : ""} ${className}`} style={{ backgroundColor: C.card, border: `1px solid ${C.line}`, transition: "transform 0.1s ease", ...style }}>{children}</div>);
+    const Button = ({ children, onClick, variant = "primary", className = "", disabled = false }) => {
+      const styles = { primary: { backgroundColor: C.ink, color: C.bg }, secondary: { backgroundColor: "transparent", color: C.ink, border: `1px solid ${C.ink}` }, accent: { backgroundColor: C.accent, color: "white" }, ghost: { backgroundColor: "transparent", color: C.muted } };
+      return (<button onClick={onClick} disabled={disabled} className={`ff-body no-tap-highlight rounded-full px-6 py-3.5 text-sm font-medium tracking-wide active:scale-95 disabled:opacity-40 ${className}`} style={{ ...styles[variant], transition: "transform 0.1s, opacity 0.2s" }}>{children}</button>);
+    };
+    const SectionLabel = ({ children, accent }) => (<div className="flex items-center gap-3 mb-3"><span className="ff-mono text-[10px] uppercase font-semibold" style={{ color: accent || C.muted, letterSpacing: "0.18em" }}>{children}</span><div className="flex-1 h-px" style={{ backgroundColor: C.line }} /></div>);
+
+    const SetupScreen = ({ onComplete }) => {
+      const [date, setDate] = useState(todayISO());
+      return (<div className="min-h-screen flex flex-col px-6 py-12" style={{ backgroundColor: C.bgDark, color: C.bg }}>
+        <div className="flex-1 flex flex-col justify-center">
+          <Pill color={C.accentLight} border={C.lineDark}>The Green Book</Pill>
+          <h1 className="ff-display mt-6 text-5xl leading-[1.05] tracking-tight" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 50, 'wght' 400" }}>Twelve weeks.<br /><em style={{ color: C.accentLight, fontStyle: "italic" }}>Eight strokes.</em></h1>
+          <p className="ff-body mt-6 text-base leading-relaxed" style={{ color: C.mutedLight }}>A daily companion for moving from 18 to 10. Your drills update each week. Your data stays on this device.</p>
+          <div className="mt-12">
+            <div className="ff-mono text-[10px] uppercase mb-2" style={{ color: C.mutedLight, letterSpacing: "0.18em" }}>Start Date</div>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="ff-mono w-full text-2xl py-3 bg-transparent border-b focus:outline-none" style={{ color: C.bg, borderColor: C.lineDark, colorScheme: "dark" }} />
+            <div className="ff-body text-sm mt-2" style={{ color: C.mutedLight }}>Tap to change. Today is fine.</div>
+          </div>
+        </div>
+        <Button onClick={() => onComplete(date)} variant="accent" className="w-full">Begin Week 1 →</Button>
+      </div>);
+    };
+
+    const WeekIndicator = ({ week }) => (<div className="flex items-baseline gap-3"><div className="ff-display text-3xl leading-none" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 30, 'wght' 500" }}>Week <span className="ff-mono font-medium">{week}</span></div><div className="ff-body text-sm" style={{ color: C.muted }}>of 12</div></div>);
+    const PhaseBar = ({ week }) => (<div className="flex gap-1.5 mt-3">{[1,2,3,4,5,6,7,8,9,10,11,12].map((w) => (<div key={w} className="flex-1 h-1 rounded-full" style={{ backgroundColor: w < week ? C.ink : w === week ? C.accent : C.line, transition: "background-color 0.3s" }} />))}</div>);
+
+    const HomeScreen = ({ week, phase, sessions, rounds, onPickDay, onOpenSettings }) => {
+      const completedDays = new Set(sessions.filter((s) => s.week === week).map((s) => s.day));
+      const remainingCount = 4 - completedDays.size;
+      const lastRound = rounds[rounds.length - 1];
+      return (<div className="px-6 safe-top pb-32">
+        <div className="flex items-start justify-between mb-2">
+          <Pill color={C.accent} border={C.line}>Phase {phase} · {PHASES[phase].name}</Pill>
+          <button onClick={onOpenSettings} className="no-tap-highlight active:opacity-50"><Settings size={18} style={{ color: C.muted }} /></button>
+        </div>
+        <WeekIndicator week={week} /><PhaseBar week={week} />
+        <div className="mt-10"><SectionLabel>This Week</SectionLabel>
+          <Card className="p-6">
+            <div>
+              <div className="ff-display text-4xl leading-none" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 30, 'wght' 500" }}><span className="ff-mono">{completedDays.size}</span><span className="ff-body text-base font-normal" style={{ color: C.muted }}> / 4 sessions</span></div>
+              <div className="ff-body text-sm mt-1" style={{ color: C.muted }}>{remainingCount === 0 ? "All four sessions logged. Excellent." : `${remainingCount} session${remainingCount > 1 ? "s" : ""} remaining`}</div>
+            </div>
+            <div className="grid grid-cols-4 gap-2 mt-5">
+              {[1,2,3,4].map((d) => { const done = completedDays.has(d); return (<button key={d} onClick={() => onPickDay(d)} className="no-tap-highlight rounded-xl p-3 text-left active:scale-95" style={{ backgroundColor: done ? C.ink : "transparent", border: `1px solid ${done ? C.ink : C.line}`, color: done ? C.bg : C.ink, transition: "transform 0.1s" }}>
+                <div className="flex items-center justify-between mb-1.5"><span className="ff-mono text-[10px] uppercase tracking-widest" style={{ opacity: 0.7 }}>D{d}</span>{done && <Check size={12} style={{ color: C.accentLight }} />}</div>
+                <div className="ff-body text-xs leading-tight font-medium">{DAYS[d].title}</div>
+              </button>); })}
+            </div>
+          </Card>
+        </div>
+        <div className="mt-8"><SectionLabel>Phase Focus</SectionLabel>
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-2"><div className="ff-display text-2xl" style={{ fontVariationSettings: "'opsz' 96, 'SOFT' 50, 'wght' 500" }}>{PHASES[phase].name}</div><Pill color={C.muted}>Wk {PHASES[phase].weeks}</Pill></div>
+            <p className="ff-body text-sm leading-relaxed" style={{ color: C.ink2 }}>{PHASES[phase].desc}</p>
+          </Card>
+        </div>
+        {lastRound && (<div className="mt-8"><SectionLabel>Last Round</SectionLabel>
+          <Card className="p-6">
+            <div className="flex items-baseline gap-4">
+              <div className="ff-display text-5xl leading-none" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 30, 'wght' 500" }}><span className="ff-mono">{lastRound.score || "—"}</span></div>
+              <div className="flex-1"><div className="ff-body text-sm" style={{ color: C.ink }}>{lastRound.course || "Round logged"}</div><div className="ff-mono text-xs mt-0.5" style={{ color: C.muted }}>{fmtDate(lastRound.date)}</div></div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+              <div><div className="ff-mono text-[10px] uppercase" style={{ color: C.muted, letterSpacing: "0.15em" }}>Putts</div><div className="ff-mono text-lg" style={{ color: C.ink }}>{lastRound.putts || "—"}</div></div>
+              <div><div className="ff-mono text-[10px] uppercase" style={{ color: C.muted, letterSpacing: "0.15em" }}>3-Putts</div><div className="ff-mono text-lg" style={{ color: C.ink }}>{lastRound.threePutts != null ? lastRound.threePutts : "—"}</div></div>
+              <div><div className="ff-mono text-[10px] uppercase" style={{ color: C.muted, letterSpacing: "0.15em" }}>GIR</div><div className="ff-mono text-lg" style={{ color: C.ink }}>{lastRound.gir || "—"}</div></div>
+            </div>
+          </Card>
+        </div>)}
+      </div>);
+    };
+
+    const DrillScreen = ({ day, week, phase, onBack, onSave, prefill }) => {
+      const dayData = DAYS[day];
+      const [viewPhase, setViewPhase] = useState(phase);
+      const phaseData = dayData.phases[viewPhase];
+      const drills = phaseData.drills;
+      const isCurrentPhase = viewPhase === phase;
+      const weekNote = isCurrentPhase ? (phaseData.weeks && phaseData.weeks[week]) : null;
+      const totalMins = drills.reduce((sum, d) => sum + d.mins, 0);
+      const [done, setDone] = useState((prefill && prefill.done) || {});
+      const [metrics, setMetrics] = useState((prefill && prefill.metrics) || {});
+      const [note, setNote] = useState((prefill && prefill.note) || "");
+      const [savedFlash, setSavedFlash] = useState(false);
+      useEffect(() => { if (isCurrentPhase) { setDone((prefill && prefill.done) || {}); setMetrics((prefill && prefill.metrics) || {}); setNote((prefill && prefill.note) || ""); } else { setDone({}); setMetrics({}); setNote(""); } }, [viewPhase]);
+      const completedCount = Object.values(done).filter(Boolean).length;
+      const toggleDone = (i) => isCurrentPhase && setDone((d) => ({ ...d, [i]: !d[i] }));
+      const handleSave = () => { onSave({ day, week, phase, date: todayISO(), done, metrics, note }); setSavedFlash(true); setTimeout(() => onBack(), 700); };
+      return (<div className="min-h-screen pb-32">
+        <div className="sticky top-0 z-10 px-6 safe-top pb-4" style={{ backgroundColor: C.bg, borderBottom: `1px solid ${C.line}` }}>
+          <button onClick={onBack} className="no-tap-highlight flex items-center gap-1 active:opacity-50 mb-3" style={{ color: C.muted }}><ChevronLeft size={18} /><span className="ff-body text-sm">Back</span></button>
+          <div className="flex items-baseline justify-between"><Pill color={C.accent} border={C.line}>{dayData.theme}</Pill><span className="ff-mono text-xs" style={{ color: C.muted }}>{totalMins} min</span></div>
+          <h1 className="ff-display text-3xl leading-tight mt-2" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 30, 'wght' 500" }}>{dayData.short}: <em style={{ color: C.accent, fontStyle: "italic" }}>{dayData.title}</em></h1>
+          <div className="flex gap-1.5 mt-3">{[1,2,3].map((p) => { const active = viewPhase === p; const isThisCurrent = p === phase; return (<button key={p} onClick={() => setViewPhase(p)} className="no-tap-highlight flex-1 active:scale-95 py-1.5 px-2 rounded-lg" style={{ backgroundColor: active ? C.ink : "transparent", color: active ? C.bg : C.muted, border: `1px solid ${active ? C.ink : C.line}`, transition: "transform 0.1s" }}><div className="ff-mono text-[9px] uppercase font-semibold" style={{ letterSpacing: "0.12em" }}>Phase {p}{isThisCurrent ? " · now" : ""}</div><div className="ff-body text-[11px] truncate" style={{ opacity: 0.85, marginTop: 1 }}>{PHASES[p].name}</div></button>); })}</div>
+          {weekNote && (<div className="ff-body text-sm mt-3 px-3 py-2 rounded-lg inline-block" style={{ backgroundColor: C.bgDark, color: C.accentLight }}><span className="ff-mono text-[10px] uppercase mr-2" style={{ letterSpacing: "0.15em", opacity: 0.7 }}>Week {week}</span>{weekNote}</div>)}
+          {!isCurrentPhase && (<div className="ff-body text-sm mt-3 px-3 py-2 rounded-lg" style={{ backgroundColor: C.line, color: C.ink2 }}><span className="ff-mono text-[10px] uppercase mr-2" style={{ letterSpacing: "0.15em", fontWeight: 600 }}>Preview</span>Saving disabled — you're in Phase {phase}.</div>)}
+        </div>
+        <div className="px-6 pt-6 space-y-3">
+          {drills.map((drill, i) => { const isDone = !!done[i]; return (<Card key={`${viewPhase}-${i}`} className="overflow-hidden"><div className="p-5"><div className="flex items-start gap-4">
+            <button onClick={() => toggleDone(i)} disabled={!isCurrentPhase} className="no-tap-highlight flex-shrink-0 mt-0.5 active:scale-90" style={{ width: 28, height: 28, borderRadius: "50%", border: `2px solid ${isDone ? C.green : C.line}`, backgroundColor: isDone ? C.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", opacity: isCurrentPhase ? 1 : 0.5 }}>{isDone && <Check size={16} color="white" strokeWidth={3} />}</button>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline justify-between gap-3"><h3 className="ff-display text-xl leading-tight" style={{ fontVariationSettings: "'opsz' 96, 'SOFT' 30, 'wght' 500", color: isDone ? C.muted : C.ink, textDecoration: isDone ? "line-through" : "none" }}>{drill.name}</h3><span className="ff-mono text-xs flex-shrink-0" style={{ color: C.muted }}>{drill.mins}m</span></div>
+              <p className="ff-body text-sm mt-2 leading-relaxed" style={{ color: C.ink2 }}>{drill.desc}</p>
+              {drill.metric && isCurrentPhase && (<div className="mt-4 flex items-center gap-3"><input type="number" min="0" max={drill.metric.max} placeholder="—" value={metrics[drill.metric.key] != null ? metrics[drill.metric.key] : ""} onChange={(e) => setMetrics((m) => ({ ...m, [drill.metric.key]: e.target.value }))} className="ff-mono text-2xl w-20 text-center py-2 rounded-lg focus:outline-none" style={{ backgroundColor: C.bg, border: `1px solid ${C.line}`, color: C.ink }} /><div><div className="ff-body text-sm" style={{ color: C.ink }}>{drill.metric.label}</div><div className="ff-mono text-xs" style={{ color: C.muted }}>out of {drill.metric.max}</div></div></div>)}
+              {drill.metric && !isCurrentPhase && (<div className="mt-3 ff-mono text-xs" style={{ color: C.muted }}>Tracks: {drill.metric.label} (out of {drill.metric.max})</div>)}
+            </div>
+          </div></div></Card>); })}
+          {isCurrentPhase && (<Card className="p-5 mt-6"><div className="ff-mono text-[10px] uppercase mb-2" style={{ color: C.muted, letterSpacing: "0.18em" }}>One thing to fix next time</div><textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="e.g. Decel on 3-footers under pressure" className="ff-body w-full text-base bg-transparent focus:outline-none resize-none" style={{ color: C.ink }} /></Card>)}
+        </div>
+        {isCurrentPhase && (<div className="fixed bottom-0 left-0 right-0 px-6 pt-3 safe-bottom" style={{ background: `linear-gradient(to top, ${C.bg} 70%, transparent)` }}><Button onClick={handleSave} variant="primary" className="w-full">{savedFlash ? "✓ Saved" : `Mark Session Complete · ${completedCount}/${drills.length}`}</Button></div>)}
+      </div>);
+    };
+
+    const RoundsScreen = ({ rounds, onAdd, onUpdate, onDelete }) => {
+      const emptyForm = () => ({ date: todayISO(), course: "", score: "", putts: "", threePutts: "", fairways: "", gir: "", upDown: "", penalties: "", note: "", holeNotes: Array(18).fill("") });
+      const [editing, setEditing] = useState(false);
+      const [editIdx, setEditIdx] = useState(null);
+      const [form, setForm] = useState(emptyForm());
+      const [showHoles, setShowHoles] = useState(false);
+      const startNew = () => { setForm(emptyForm()); setEditIdx(null); setShowHoles(false); setEditing(true); };
+      const startEdit = (origIdx) => { const r = rounds[origIdx]; const holeNotes = Array.isArray(r.holeNotes) && r.holeNotes.length === 18 ? r.holeNotes : Array(18).fill(""); setForm({ ...emptyForm(), ...r, holeNotes }); setEditIdx(origIdx); setShowHoles(false); setEditing(true); };
+      const submit = () => { if (!form.score && !form.putts) return; if (editIdx !== null) onUpdate(editIdx, form); else onAdd(form); setEditing(false); };
+      const recent = rounds.map((r, i) => ({ ...r, _idx: i })).reverse();
+      const last5 = rounds.slice(-5);
+      const avg = (key) => { const valid = last5.filter((r) => r[key] !== "" && r[key] != null).map((r) => Number(r[key])); return valid.length ? (valid.reduce((s, v) => s + v, 0) / valid.length).toFixed(1) : "—"; };
+      if (editing) {
+        const F = ({ k, label, placeholder }) => (<div><div className="ff-mono text-[10px] uppercase mb-1" style={{ color: C.muted, letterSpacing: "0.15em" }}>{label}</div><input value={form[k] != null ? form[k] : ""} onChange={(e) => setForm({ ...form, [k]: e.target.value })} placeholder={placeholder} type={k === "date" ? "date" : (k === "course" || k === "note") ? "text" : "number"} className="ff-mono w-full bg-transparent text-lg py-2 focus:outline-none border-b" style={{ color: C.ink, borderColor: C.line }} /></div>);
+        const filledHoles = form.holeNotes.filter((n) => n && n.trim()).length;
+        return (<div className="px-6 safe-top pb-32">
+          <button onClick={() => setEditing(false)} className="no-tap-highlight flex items-center gap-1 active:opacity-50 mb-4" style={{ color: C.muted }}><ChevronLeft size={18} /><span className="ff-body text-sm">Cancel</span></button>
+          <h1 className="ff-display text-4xl leading-tight mb-6" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 30, 'wght' 500" }}>{editIdx !== null ? "Edit" : "Log a"} <em style={{ color: C.accent, fontStyle: "italic" }}>round</em></h1>
+          <div className="space-y-5">
+            <F k="date" label="Date" /><F k="course" label="Course" placeholder="Optional" />
+            <div className="grid grid-cols-2 gap-5"><F k="score" label="Score" /><F k="putts" label="Putts" /><F k="threePutts" label="3-Putts" /><F k="fairways" label="Fairways /14" /><F k="gir" label="GIR /18" /><F k="upDown" label="Up & Down %" /><F k="penalties" label="Penalties" /></div>
+            <div><div className="ff-mono text-[10px] uppercase mb-1" style={{ color: C.muted, letterSpacing: "0.15em" }}>General Notes</div><textarea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} rows={2} placeholder="What worked? What didn't?" className="ff-body w-full bg-transparent text-base py-2 focus:outline-none border-b resize-none" style={{ color: C.ink, borderColor: C.line }} /></div>
+            <button onClick={() => setShowHoles(!showHoles)} className="no-tap-highlight w-full flex items-center justify-between py-4 px-1 active:opacity-70" style={{ borderTop: `1px solid ${C.line}`, borderBottom: `1px solid ${C.line}` }}><span className="ff-mono text-[11px] uppercase" style={{ color: C.ink, letterSpacing: "0.18em", fontWeight: 600 }}>Hole-by-hole notes</span><span className="ff-mono text-xs" style={{ color: C.muted }}>{filledHoles > 0 ? `${filledHoles}/18 · ` : ""}{showHoles ? "Hide" : "Show"}</span></button>
+            {showHoles && (<div className="space-y-2.5 pt-2">
+              <div className="flex items-center gap-2 mb-1"><div className="ff-mono text-[10px] uppercase" style={{ color: C.muted, letterSpacing: "0.18em" }}>Front nine</div><div className="flex-1 h-px" style={{ backgroundColor: C.line }} /></div>
+              {[...Array(18)].map((_, i) => (<Fragment key={i}>{i === 9 && (<div className="flex items-center gap-2 pt-3 mb-1"><div className="ff-mono text-[10px] uppercase" style={{ color: C.muted, letterSpacing: "0.18em" }}>Back nine</div><div className="flex-1 h-px" style={{ backgroundColor: C.line }} /></div>)}<div className="flex items-start gap-3"><div className="ff-mono text-sm font-medium pt-2.5 w-7 flex-shrink-0" style={{ color: C.muted }}>{i + 1}.</div><input value={form.holeNotes[i] || ""} onChange={(e) => { const nh = [...form.holeNotes]; nh[i] = e.target.value; setForm({ ...form, holeNotes: nh }); }} placeholder="—" className="ff-body flex-1 bg-transparent text-sm py-2 focus:outline-none border-b" style={{ color: C.ink, borderColor: C.line }} /></div></Fragment>))}
+            </div>)}
+            {editIdx !== null && (<button onClick={() => { onDelete(editIdx); setEditing(false); }} className="ff-body text-sm w-full text-center py-3 mt-2" style={{ color: C.warn }}>Delete this round</button>)}
+          </div>
+          <div className="fixed bottom-0 left-0 right-0 px-6 pt-3 safe-bottom" style={{ background: `linear-gradient(to top, ${C.bg} 70%, transparent)` }}><Button onClick={submit} variant="primary" className="w-full">{editIdx !== null ? "Save Changes" : "Save Round"}</Button></div>
+        </div>);
+      }
+      return (<div className="px-6 safe-top pb-32">
+        <Pill color={C.accent}>Rounds</Pill>
+        <h1 className="ff-display text-4xl mt-3 leading-tight" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 30, 'wght' 500" }}>On the <em style={{ color: C.accent, fontStyle: "italic" }}>course</em></h1>
+        {rounds.length > 0 && (<div className="mt-8 grid grid-cols-3 gap-2">{[{ label: "Last 5 score", key: "score" }, { label: "Last 5 putts", key: "putts" }, { label: "Best score", key: "score", agg: "min" }].map((stat, i) => { let v = "—"; if (stat.agg === "min") { const valid = rounds.map((r) => Number(r.score)).filter(Boolean); v = valid.length ? Math.min(...valid) : "—"; } else v = avg(stat.key); return (<Card key={i} className="p-4"><div className="ff-mono text-[10px] uppercase mb-1" style={{ color: C.muted, letterSpacing: "0.12em" }}>{stat.label}</div><div className="ff-display text-3xl" style={{ fontVariationSettings: "'opsz' 96, 'SOFT' 30, 'wght' 500" }}><span className="ff-mono">{v}</span></div></Card>); })}</div>)}
+        <div className="mt-8 space-y-2">
+          {recent.length === 0 && (<Card className="p-8 text-center"><div className="ff-body text-sm" style={{ color: C.muted }}>No rounds logged yet.</div><div className="ff-body text-sm mt-1" style={{ color: C.muted }}>Tap + below after your next round.</div></Card>)}
+          {recent.map((r) => { const noteCount = (r.holeNotes || []).filter((n) => n && n.trim()).length; return (<Card key={r._idx} onClick={() => startEdit(r._idx)} className="p-4"><div className="flex items-center gap-4"><div className="ff-display text-3xl leading-none flex-shrink-0" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 30, 'wght' 500", width: 60 }}><span className="ff-mono">{r.score || "—"}</span></div><div className="flex-1 min-w-0"><div className="ff-body text-sm font-medium truncate" style={{ color: C.ink }}>{r.course || "Round"}</div><div className="ff-mono text-xs mt-0.5" style={{ color: C.muted }}>{fmtDate(r.date)} · {r.putts || "—"} putts · {r.threePutts != null ? r.threePutts : "—"} 3p{noteCount > 0 && <span> · <span style={{ color: C.accent }}>{noteCount} hole notes</span></span>}</div></div><ChevronLeft size={16} style={{ color: C.mutedLight, transform: "rotate(180deg)" }} /></div></Card>); })}
+        </div>
+        <button onClick={startNew} className="no-tap-highlight fixed bottom-24 right-6 rounded-full active:scale-95" style={{ width: 56, height: 56, backgroundColor: C.ink, color: C.bg, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(27,41,32,0.3)", transition: "transform 0.1s" }}><Plus size={24} /></button>
+      </div>);
+    };
+
+    const TestsScreen = ({ tests, onSave }) => {
+      const [editing, setEditing] = useState(null);
+      const [form, setForm] = useState({});
+      const checkpoints = [{ key: "wk1", label: "Week 1", sub: "Baseline" }, { key: "wk4", label: "Week 4", sub: "End Phase 1" }, { key: "wk8", label: "Week 8", sub: "End Phase 2" }, { key: "wk12", label: "Week 12", sub: "Final" }];
+      const startEdit = (key) => { setForm(tests[key] || {}); setEditing(key); };
+      const submit = () => { onSave(editing, form); setEditing(null); setForm({}); };
+      if (editing) {
+        return (<div className="px-6 safe-top pb-32">
+          <button onClick={() => setEditing(null)} className="no-tap-highlight flex items-center gap-1 active:opacity-50 mb-4" style={{ color: C.muted }}><ChevronLeft size={18} /><span className="ff-body text-sm">Back</span></button>
+          <Pill color={C.accent}>{checkpoints.find((c) => c.key === editing).sub}</Pill>
+          <h1 className="ff-display text-4xl mt-3 leading-tight" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 30, 'wght' 500" }}>{checkpoints.find((c) => c.key === editing).label} <em style={{ color: C.accent, fontStyle: "italic" }}>test</em></h1>
+          <div className="space-y-5 mt-8">{TEST_BATTERY.map((t) => (<div key={t.key}><div className="flex items-baseline justify-between mb-1"><div className="ff-body text-sm" style={{ color: C.ink }}>{t.label}</div>{t.goal != null && <div className="ff-mono text-xs" style={{ color: C.muted }}>goal: {t.goal}</div>}</div><input type="number" value={form[t.key] != null ? form[t.key] : ""} onChange={(e) => setForm({ ...form, [t.key]: e.target.value })} className="ff-mono w-full bg-transparent text-2xl py-2 focus:outline-none border-b" style={{ color: C.ink, borderColor: C.line }} /></div>))}</div>
+          <div className="fixed bottom-0 left-0 right-0 px-6 pt-3 safe-bottom" style={{ background: `linear-gradient(to top, ${C.bg} 70%, transparent)` }}><Button onClick={submit} variant="primary" className="w-full">Save Results</Button></div>
+        </div>);
+      }
+      return (<div className="px-6 safe-top pb-32">
+        <Pill color={C.accent}>Benchmarks</Pill>
+        <h1 className="ff-display text-4xl mt-3 leading-tight" style={{ fontVariationSettings: "'opsz' 144, 'SOFT' 30, 'wght' 500" }}>Phase <em style={{ color: C.accent, fontStyle: "italic" }}>tests</em></h1>
+        <p className="ff-body text-sm mt-3 leading-relaxed" style={{ color: C.muted }}>Take the same battery four times. Same conditions. Same drills. The numbers prove the work.</p>
+        <div className="mt-8 space-y-3">{checkpoints.map((c) => { const data = tests[c.key]; const baseline = tests.wk1; const filled = data && Object.values(data).some((v) => v !== "" && v != null); return (<Card key={c.key} onClick={() => startEdit(c.key)} className="p-5">
+          <div className="flex items-start justify-between"><div><div className="ff-display text-2xl leading-none" style={{ fontVariationSettings: "'opsz' 96, 'SOFT' 30, 'wght' 500" }}>{c.label}</div><div className="ff-mono text-[10px] uppercase mt-1" style={{ color: C.muted, letterSpacing: "0.15em" }}>{c.sub}</div></div><Pill color={filled ? C.green : C.muted} border={filled ? C.green : C.line}>{filled ? "Logged" : "Pending"}</Pill></div>
+          {filled && (<div className="grid grid-cols-3 gap-3 mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>{TEST_BATTERY.slice(0, 6).map((t) => { const v = data[t.key]; if (v == null || v === "") return null; const base = baseline && baseline[t.key]; const delta = base != null && base !== "" && c.key !== "wk1" ? Number(v) - Number(base) : null; return (<div key={t.key}><div className="ff-mono text-[9px] uppercase" style={{ color: C.muted, letterSpacing: "0.12em" }}>{t.label.split(" /")[0]}</div><div className="ff-mono text-base" style={{ color: C.ink }}>{v}{delta != null && <span className="text-xs ml-1" style={{ color: delta > 0 ? C.green : delta < 0 ? C.warn : C.muted }}>{delta > 0 ? "+" : ""}{delta}</span>}</div></div>); })}</div>)}
+        </Card>); })}</div>
+      </div>);
+    };
+
+    const SettingsModal = ({ startDate, onSetStartDate, onClose, onReset }) => (<div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ backgroundColor: "rgba(27,41,32,0.5)" }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-10" style={{ backgroundColor: C.card }}>
+        <div className="flex items-center justify-between mb-6"><h2 className="ff-display text-2xl" style={{ fontVariationSettings: "'opsz' 96, 'SOFT' 30, 'wght' 500" }}>Settings</h2><button onClick={onClose} className="no-tap-highlight"><X size={20} style={{ color: C.muted }} /></button></div>
+        <div className="space-y-5">
+          <div><div className="ff-mono text-[10px] uppercase mb-2" style={{ color: C.muted, letterSpacing: "0.18em" }}>Plan Start Date</div><input type="date" value={startDate} onChange={(e) => onSetStartDate(e.target.value)} className="ff-mono w-full text-lg py-2 bg-transparent border-b focus:outline-none" style={{ color: C.ink, borderColor: C.line }} /></div>
+          <button onClick={onReset} className="ff-body text-sm w-full text-left py-3" style={{ color: C.warn }}>Reset all data</button>
+          <div className="pt-2 border-t" style={{ borderColor: C.line }}><div className="ff-mono text-[10px] uppercase mb-2" style={{ color: C.muted, letterSpacing: "0.18em" }}>Install on iPhone</div><div className="ff-body text-sm leading-relaxed" style={{ color: C.ink2 }}>Tap the Share button in Safari, then "Add to Home Screen". Opens like a native app.</div></div>
+        </div>
+      </div>
+    </div>);
+
+    const BottomNav = ({ tab, setTab }) => {
+      const tabs = [{ key: "home", label: "Today", icon: Calendar }, { key: "rounds", label: "Rounds", icon: Trophy }, { key: "tests", label: "Tests", icon: BarChart3 }];
+      return (<div className="fixed bottom-0 left-0 right-0 z-30 px-4 pt-2 safe-bottom" style={{ backgroundColor: C.bg, borderTop: `1px solid ${C.line}` }}>
+        <div className="flex items-center justify-around max-w-md mx-auto">{tabs.map((t) => { const IconComp = t.icon; const active = tab === t.key; return (<button key={t.key} onClick={() => setTab(t.key)} className="no-tap-highlight flex flex-col items-center gap-1 px-6 py-2 active:scale-95" style={{ transition: "transform 0.1s" }}><IconComp size={20} style={{ color: active ? C.ink : C.mutedLight }} strokeWidth={active ? 2.25 : 1.5} /><span className="ff-mono text-[9px] uppercase" style={{ color: active ? C.ink : C.mutedLight, letterSpacing: "0.15em", fontWeight: active ? 600 : 400 }}>{t.label}</span></button>); })}</div>
+      </div>);
+    };
+
+    function App() {
+      const [loading, setLoading] = useState(true);
+      const [meta, setMeta] = useState(null);
+      const [sessions, setSessions] = useState([]);
+      const [rounds, setRounds] = useState([]);
+      const [tests, setTests] = useState({});
+      const [tab, setTab] = useState("home");
+      const [activeDay, setActiveDay] = useState(null);
+      const [showSettings, setShowSettings] = useState(false);
+      useEffect(() => { (async () => { const m = await sg("golf:meta", null); const s = await sg("golf:sessions", []); const r = await sg("golf:rounds", []); const t = await sg("golf:tests", {}); setMeta(m); setSessions(s); setRounds(r); setTests(t); setLoading(false); })(); }, []);
+      const handleSetup = async (date) => { const m = { startDate: date }; setMeta(m); await ss("golf:meta", m); };
+      const saveSession = async (session) => { const next = [...sessions.filter((s) => !(s.week === session.week && s.day === session.day)), session]; setSessions(next); await ss("golf:sessions", next); };
+      const addRound = async (round) => { const next = [...rounds, round]; setRounds(next); await ss("golf:rounds", next); };
+      const updateRound = async (idx, round) => { const next = rounds.map((r, i) => (i === idx ? round : r)); setRounds(next); await ss("golf:rounds", next); };
+      const deleteRound = async (idx) => { const next = rounds.filter((_, i) => i !== idx); setRounds(next); await ss("golf:rounds", next); };
+      const saveTest = async (key, data) => { const next = { ...tests, [key]: data }; setTests(next); await ss("golf:tests", next); };
+      const updateStartDate = async (date) => { const m = { ...meta, startDate: date }; setMeta(m); await ss("golf:meta", m); };
+      const reset = async () => { if (!confirm("Erase all data? This cannot be undone.")) return; await ss("golf:meta", null); await ss("golf:sessions", []); await ss("golf:rounds", []); await ss("golf:tests", {}); setMeta(null); setSessions([]); setRounds([]); setTests({}); setShowSettings(false); };
+      if (loading) return (<div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.bg }}><div className="ff-display text-2xl" style={{ color: C.muted, fontVariationSettings: "'opsz' 96, 'SOFT' 30, 'wght' 500" }}>Loading…</div></div>);
+      if (!meta) return <div className="ff-body" style={{ minHeight: "100vh" }}><SetupScreen onComplete={handleSetup} /></div>;
+      const week = getWeek(meta.startDate);
+      const phase = getPhase(week);
+      const currentSession = activeDay ? sessions.find((s) => s.week === week && s.day === activeDay) : null;
+      return (<div className="ff-body relative grain" style={{ backgroundColor: C.bg, color: C.ink, minHeight: "100vh" }}>
+        {activeDay && (<DrillScreen day={activeDay} week={week} phase={phase} prefill={currentSession} onBack={() => setActiveDay(null)} onSave={(s) => { saveSession(s); }} />)}
+        {!activeDay && tab === "home" && (<HomeScreen week={week} phase={phase} sessions={sessions} rounds={rounds} onPickDay={setActiveDay} onOpenSettings={() => setShowSettings(true)} />)}
+        {!activeDay && tab === "rounds" && <RoundsScreen rounds={rounds} onAdd={addRound} onUpdate={updateRound} onDelete={deleteRound} />}
+        {!activeDay && tab === "tests" && <TestsScreen tests={tests} onSave={saveTest} />}
+        {!activeDay && <BottomNav tab={tab} setTab={setTab} />}
+        {showSettings && <SettingsModal startDate={meta.startDate} onSetStartDate={updateStartDate} onClose={() => setShowSettings(false)} onReset={reset} />}
+      </div>);
+    }
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
